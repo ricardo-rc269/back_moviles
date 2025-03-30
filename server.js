@@ -13,7 +13,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 👉 Twilio config
-const accountSid = 'AC35a1bff5af76f45fea4f1e52154e78d3'; // ← SID DE CUENTA
+const accountSid = 'SK756351e72e0d0032c12a34f983e75a3c'; // ← SID DE CUENTA
 const authToken = 'abf44a34ed57893cdda1c74553dd1ff3';     // ← Auth token real
 const client = twilio(accountSid, authToken);
 
