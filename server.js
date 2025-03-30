@@ -1,15 +1,23 @@
 import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+import twilio from 'twilio';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 👉 Supabase config
 const supabaseUrl = 'https://akvkayzjcazyhytbfnbz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrdmtheXpqY2F6eWh5dGJmbmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzMTM2MTgsImV4cCI6MjA1ODg4OTYxOH0.t-AsmvTGpYLWCoxxNDV6017PdlSydpRvant2WxxMFIE';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// 👉 Twilio config
+const accountSid = 'AC35a1bff5af76f45fea4f1e52154e78d3'; // ← SID DE CUENTA
+const authToken = 'abf44a34ed57893cdda1c74553dd1ff3';     // ← Auth token real
+const client = twilio(accountSid, authToken);
+
+// ✅ Ruta POST para guardar registros
 app.post('/registros', async (req, res) => {
   const { user_id, nombre, latitud, longitud, foto } = req.body;
 
@@ -21,13 +29,11 @@ app.post('/registros', async (req, res) => {
         nombre,
         latitud,
         longitud,
-        foto: foto || null, // Si no se envía foto, se inserta null
+        foto: foto || null,
       })
       .select();
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) return res.status(400).json({ error: error.message });
 
     res.status(200).json({ registros: data });
   } catch (e) {
@@ -36,20 +42,19 @@ app.post('/registros', async (req, res) => {
   }
 });
 
+// ✅ Ruta GET para obtener registros por usuario
 app.get('/registros/:user_id', async (req, res) => {
   const { user_id } = req.params;
-  
+
   try {
     const { data, error } = await supabase
       .from('lugares_favoritos')
       .select('*')
       .eq('user_id', user_id)
       .order('id', { ascending: false });
-      
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-    
+
+    if (error) return res.status(400).json({ error: error.message });
+
     res.status(200).json({ registros: data });
   } catch (e) {
     console.error('Error en GET /registros/:user_id:', e);
@@ -57,8 +62,26 @@ app.get('/registros/:user_id', async (req, res) => {
   }
 });
 
+// ✅ Ruta POST para enviar SMS con Twilio
+app.post('/enviar-sms', async (req, res) => {
+  const { to, message } = req.body;
 
-const PORT = 3000;
+  try {
+    const response = await client.messages.create({
+      body: message,
+      from: '+16205361380', // ← Tu número Twilio
+      to,
+    });
+
+    res.status(200).json({ success: true, sid: response.sid });
+  } catch (error) {
+    console.error('Error al enviar SMS:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 🚀 Servidor en marcha
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });
