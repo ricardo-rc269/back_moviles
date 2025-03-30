@@ -36,6 +36,28 @@ app.post('/registros', async (req, res) => {
   }
 });
 
+app.get('/registros/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  
+  try {
+    const { data, error } = await supabase
+      .from('lugares_favoritos')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('id', { ascending: false });
+      
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    res.status(200).json({ registros: data });
+  } catch (e) {
+    console.error('Error en GET /registros/:user_id:', e);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
