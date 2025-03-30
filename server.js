@@ -11,15 +11,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.post('/registros', async (req, res) => {
-  const { token, user_id, nombre, latitud, longitud, foto } = req.body;
-
-  // Verifica que se envíe el token
-  if (!token) {
-    return res.status(401).json({ error: 'Token no proporcionado' });
-  }
-
-  // Configura el cliente de Supabase con el token del usuario
-  supabase.auth.setAuth(token);
+  const { user_id, nombre, latitud, longitud, foto } = req.body;
 
   try {
     const { data, error } = await supabase
@@ -29,7 +21,7 @@ app.post('/registros', async (req, res) => {
         nombre,
         latitud,
         longitud,
-        foto,
+        foto: foto || null, // Si no se envía foto, se inserta null
       })
       .select();
 
