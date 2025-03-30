@@ -10,34 +10,22 @@ const supabaseUrl = 'https://akvkayzjcazyhytbfnbz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrdmtheXpqY2F6eWh5dGJmbmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzMTM2MTgsImV4cCI6MjA1ODg4OTYxOH0.t-AsmvTGpYLWCoxxNDV6017PdlSydpRvant2WxxMFIE';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-app.get('/registros', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('lugares_favoritos')
-      .select('*')
-      .order('id', { ascending: false });
-
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(200).json({ registros: data });
-  } catch (e) {
-    console.error('Error en GET /registros:', e);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
 app.post('/registros', async (req, res) => {
-  // Extrae los datos enviados en el body
-  const { user_id, nombre, latitud, longitud, foto } = req.body;
+  const { token, user_id, nombre, latitud, longitud, foto } = req.body;
+
+  // Verifica que se envíe el token
+  if (!token) {
+    return res.status(401).json({ error: 'Token no proporcionado' });
+  }
+
+  // Configura el cliente de Supabase con el token del usuario
+  supabase.auth.setAuth(token);
 
   try {
-    // Inserta el registro en la tabla "lugares_favoritos"
     const { data, error } = await supabase
       .from('lugares_favoritos')
       .insert({
-        user_id, 
+        user_id,
         nombre,
         latitud,
         longitud,
@@ -49,16 +37,12 @@ app.post('/registros', async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.status(200).json({
-      message: 'Registro agregado exitosamente',
-      registros: data,
-    });
+    res.status(200).json({ registros: data });
   } catch (e) {
     console.error('Error en POST /registros:', e);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
-
 
 const PORT = 3000;
 app.listen(PORT, () => {
